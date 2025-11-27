@@ -13,6 +13,9 @@ import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.WindowInsetsCompat;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaInterface;
@@ -27,7 +30,7 @@ import java.util.Arrays;
 public class AndroidNotch extends CordovaPlugin {
     private static final String TAG = "AndroidNotch";
 
-    
+
     /**
      * Executes the request and returns PluginResult.
      *
@@ -47,7 +50,6 @@ public class AndroidNotch extends CordovaPlugin {
         }
 
         if(Build.VERSION.SDK_INT < 28) {
-
             // DisplayCutout is not available on api < 28
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, 0));
             return true;
@@ -67,14 +69,21 @@ public class AndroidNotch extends CordovaPlugin {
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, cutout != null ? (cutout.getSafeInsetTop() / density) : 0));
             return true;
         }
-        
+
         if ("getInsetsRight".equals(action)) {
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, cutout != null ? (cutout.getSafeInsetRight() / density) : 0));
             return true;
         }
 
         if ("getInsetsBottom".equals(action)) {
-            callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, cutout != null ? (cutout.getSafeInsetBottom() / density) : 0));
+            int navHeight = 0;
+            if (Build.VERSION.SDK_INT >= 24) {
+                WindowInsetsCompat insetsCompat =
+                    WindowInsetsCompat.toWindowInsetsCompat(window.getDecorView().getRootWindowInsets());
+                Insets bars = insetsCompat.getInsets(WindowInsetsCompat.Type.systemBars());
+                navHeight = bars.bottom;
+            }
+            callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, cutout != null ? ((cutout.getSafeInsetBottom() + navHeight) / density) : 0));
             return true;
         }
 
